@@ -1,0 +1,72 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.camiool.airplayfire'
+    compileSdk 35
+    ndkVersion '27.2.12479018'
+
+    defaultConfig {
+        applicationId 'com.camiool.airplayfire'
+        // Fire OS 7 (Android 9) or newer: every Fire TV Stick 4K / 4K Max.
+        minSdk 28
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0'
+
+        ndk {
+            // Fire TV sticks run a 32-bit userspace; include 64-bit for newer devices.
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+            }
+        }
+    }
+
+    signingConfigs {
+        // Fixed key committed to the repo so every build can update the previous
+        // install without uninstalling. This is a personal sideloaded app, not a
+        // store release, so a public key is acceptable here.
+        sideload {
+            storeFile file('sideload.keystore')
+            storePassword 'airplayfire'
+            keyAlias 'airplayfire'
+            keyPassword 'airplayfire'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.sideload
+        }
+        debug {
+            signingConfig signingConfigs.sideload
+        }
+    }
+
+    buildFeatures {
+        prefab true
+        buildConfig true
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '3.22.1'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // OpenSSL libcrypto as a prefab package (used by the AirPlay pairing/encryption code).
+    implementation 'com.android.ndk.thirdparty:openssl:1.1.1q-beta-1'
+}
