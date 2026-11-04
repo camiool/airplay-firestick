@@ -11,6 +11,8 @@ namespace {
 
 constexpr const char *kMimeAvc = "video/avc";
 constexpr const char *kMimeHevc = "video/hevc";
+// How long submit() may block waiting for a free decoder input buffer.
+constexpr int kInputWaitMs = 1500;
 
 int64_t nowUs() {
     timespec ts{};
@@ -171,7 +173,10 @@ bool VideoDecoder::startCodecLocked(bool h265, const std::vector<uint8_t> &param
         AMediaFormat_setInt32(fmt, AMEDIAFORMAT_KEY_HEIGHT, maxHeight_);
         AMediaFormat_setInt32(fmt, "max-width", maxWidth_);
         AMediaFormat_setInt32(fmt, "max-height", maxHeight_);
-        AMediaFormat_setInt32(fmt, AMEDIAFORMAT_KEY_MAX_INPUT_SIZE, maxWidth_ * maxHeight_);
+        // Key frames of fast-moving game scenes can be large; leave ample room so
+        // no frame is ever rejected as too big for the input buffer.
+        AMediaFormat_setInt32(fmt, AMEDIAFORMAT_KEY_MAX_INPUT_SIZE,
+                              maxWidth_ * maxHeight_ * 3 / 2);
         if (!csd0.empty()) AMediaFormat_setBuffer(fmt, "csd-0", csd0.data(), csd0.size());
         if (!csd1.empty()) AMediaFormat_setBuffer(fmt, "csd-1", csd1.data(), csd1.size());
         if (attempt == 0) {
@@ -244,9 +249,20 @@ void VideoDecoder::submit(const uint8_t *data, int len, bool h265) {
     if (!inst_ || frame.empty()) return;
 
     AMediaCodec *codec = inst_->codec;
-    ssize_t idx = AMediaCodec_dequeueInputBuffer(codec, 100000);
+    // Never drop an input frame unless the decoder is really stuck: iOS sends key
+    // frames only on stream (re)starts and rotation changes, so every later frame
+    // references the one before it. A single missing frame corrupts the picture
+    // (blocky/garbled pixels) until the next key frame, which may never come.
+    // The MediaTek decoder on Fire TV needs well over 100 ms to accept input
+    // right after a restart (e.g. when a game switches to landscape).
+    ssize_t idx = -1;
+    for (int waitedMs = 0; waitedMs < kInputWaitMs && idx < 0; waitedMs += 50) {
+        idx = AMediaCodec_dequeueInputBuffer(codec, 50000);
+        if (idx < 0 && idx != AMEDIACODEC_INFO_TRY_AGAIN_LATER) break;  // codec error
+    }
     if (idx < 0) {
-        LOGW("No decoder input buffer available, dropping frame");
+        LOGW("No decoder input buffer available after %d ms (status %zd), dropping frame",
+             kInputWaitMs, idx);
         framesDropped_++;
         return;
     }
