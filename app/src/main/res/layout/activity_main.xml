@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <com.camiool.airplayfire.AspectFrameLayout
+        android:id="@+id/videoFrame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
+
+        <SurfaceView
+            android:id="@+id/surface"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </com.camiool.airplayfire.AspectFrameLayout>
+
+    <LinearLayout
+        android:id="@+id/idle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/idle_background"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="48dp">
+
+        <ImageView
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_marginBottom="24dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_airplay" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="34sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/instructions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.2"
+            android:textColor="#C9D1D9"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:textColor="#58A6FF"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="36dp"
+            android:gravity="center"
+            android:textColor="#8B949E"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/stats"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="16dp"
+        android:background="#99000000"
+        android:fontFamily="monospace"
+        android:padding="8dp"
+        android:textColor="#7CFC00"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/toast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="40dp"
+        android:background="@drawable/toast_background"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="12dp"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:visibility="gone" />
+</FrameLayout>
